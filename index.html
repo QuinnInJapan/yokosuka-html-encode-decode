@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Base64 Encoder / Decoder</title>
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    max-width: 720px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    background: #1e1e1e;
+    color: #eee;
+  }
+  h1 { font-size: 1.25rem; }
+  h2 { font-size: 1rem; margin-top: 2rem; border-bottom: 1px solid #333; padding-bottom: .25rem; }
+  .row { display: flex; gap: .5rem; align-items: center; margin: 1rem 0; flex-wrap: wrap; }
+  input[type=file] { color: #ccc; }
+  button {
+    background: #2d7;
+    color: #000;
+    border: 0;
+    padding: .5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  button.alt { background: #7af; }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  textarea {
+    width: 100%;
+    min-height: 200px;
+    background: #111;
+    color: #eee;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: .5rem;
+    font-family: ui-monospace, monospace;
+    font-size: 13px;
+  }
+  .status { font-size: .85rem; color: #999; min-height: 1.2em; }
+  .error { color: #f66; }
+</style>
+</head>
+<body>
+  <h1>Base64 Encoder / Decoder</h1>
+  <p>Upload file, encode or decode as UTF-8 Base64.</p>
+
+  <h2>Decode (atob)</h2>
+  <p>Input: file containing Base64 text. Output: decoded UTF-8.</p>
+  <div class="row">
+    <input type="file" id="decodeFile" accept=".txt,.b64,.base64,text/*">
+    <button id="decodeBtn" disabled>Decode</button>
+    <button id="decodeDownload" class="alt" disabled>Download .txt</button>
+  </div>
+  <div class="status" id="decodeStatus"></div>
+  <textarea id="decodeOutput" placeholder="Decoded output appears here…" readonly></textarea>
+
+  <h2>Encode (btoa)</h2>
+  <p>Input: any file (text or binary). Output: Base64 string.</p>
+  <div class="row">
+    <input type="file" id="encodeFile">
+    <button id="encodeBtn" disabled>Encode</button>
+    <button id="encodeDownload" class="alt" disabled>Download .txt</button>
+  </div>
+  <div class="status" id="encodeStatus"></div>
+  <textarea id="encodeOutput" placeholder="Base64 output appears here…" readonly></textarea>
+
+<script>
+// ----- Decode -----
+const decodeFile = document.getElementById('decodeFile');
+const decodeBtn = document.getElementById('decodeBtn');
+const decodeDownload = document.getElementById('decodeDownload');
+const decodeOutput = document.getElementById('decodeOutput');
+const decodeStatus = document.getElementById('decodeStatus');
+
+let rawB64 = '';
+let decoded = '';
+
+decodeFile.addEventListener('change', async () => {
+  const f = decodeFile.files[0];
+  if (!f) return;
+  rawB64 = await f.text();
+  decodeBtn.disabled = false;
+  decodeDownload.disabled = true;
+  decodeOutput.value = '';
+  decodeStatus.className = 'status';
+  decodeStatus.textContent = `Loaded ${f.name} (${f.size} bytes). Ready to decode.`;
+});
+
+decodeBtn.addEventListener('click', () => {
+  try {
+    const cleaned = rawB64.replace(/\s+/g, '');
+    decoded = decodeURIComponent(escape(atob(cleaned)));
+    decodeOutput.value = decoded;
+    decodeDownload.disabled = false;
+    decodeStatus.className = 'status';
+    decodeStatus.textContent = `Decoded ${cleaned.length} Base64 chars → ${decoded.length} chars.`;
+  } catch (e) {
+    decodeStatus.className = 'status error';
+    decodeStatus.textContent = `Decode failed: ${e.message}`;
+    decodeDownload.disabled = true;
+  }
+});
+
+decodeDownload.addEventListener('click', () => {
+  download(decoded, 'decoded.txt', 'text/plain;charset=utf-8');
+});
+
+// ----- Encode -----
+const encodeFile = document.getElementById('encodeFile');
+const encodeBtn = document.getElementById('encodeBtn');
+const encodeDownload = document.getElementById('encodeDownload');
+const encodeOutput = document.getElementById('encodeOutput');
+const encodeStatus = document.getElementById('encodeStatus');
+
+let rawBytes = null;
+let encoded = '';
+
+encodeFile.addEventListener('change', async () => {
+  const f = encodeFile.files[0];
+  if (!f) return;
+  rawBytes = new Uint8Array(await f.arrayBuffer());
+  encodeBtn.disabled = false;
+  encodeDownload.disabled = true;
+  encodeOutput.value = '';
+  encodeStatus.className = 'status';
+  encodeStatus.textContent = `Loaded ${f.name} (${f.size} bytes). Ready to encode.`;
+});
+
+encodeBtn.addEventListener('click', () => {
+  try {
+    // Build Latin-1 string from raw bytes, then btoa.
+    // Works for any file (text or binary) — bytes pass through unchanged.
+    let bin = '';
+    for (let i = 0; i < rawBytes.length; i++) bin += String.fromCharCode(rawBytes[i]);
+    encoded = btoa(bin);
+    encodeOutput.value = encoded;
+    encodeDownload.disabled = false;
+    encodeStatus.className = 'status';
+    encodeStatus.textContent = `Encoded ${rawBytes.length} bytes → ${encoded.length} Base64 chars.`;
+  } catch (e) {
+    encodeStatus.className = 'status error';
+    encodeStatus.textContent = `Encode failed: ${e.message}`;
+    encodeDownload.disabled = true;
+  }
+});
+
+encodeDownload.addEventListener('click', () => {
+  download(encoded, 'encoded.txt', 'text/plain;charset=utf-8');
+});
+
+function download(data, name, type) {
+  const blob = new Blob([data], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
