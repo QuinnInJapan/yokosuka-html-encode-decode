@@ -90,7 +90,10 @@ decodeFile.addEventListener('change', async () => {
 
 decodeBtn.addEventListener('click', () => {
   try {
-    const cleaned = rawB64.replace(/\s+/g, '');
+    const cleaned = rawB64
+      .replace(/-/g, '+')                  // URL-safe → standard
+      .replace(/_/g, '/')
+      .replace(/[^A-Za-z0-9+/=]/g, '');    // drop BOM, whitespace, anything non-Base64
     decoded = decodeURIComponent(escape(atob(cleaned)));
     decodeOutput.value = decoded;
     decodeDownload.disabled = false;
