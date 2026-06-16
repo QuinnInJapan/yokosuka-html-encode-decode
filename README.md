@@ -27,5 +27,5 @@ Same `index.html`, served through third-party CDNs straight from this repo.
 ## Implementation
 
 - `btoa`/`atob` over raw `Uint8Array` bytes for binary-safe single-file encode/decode.
-- JSZip loaded from a CDN for browser-only zip read/write; no server or build step needed.
+- JSZip is vendored in `vendor/jszip.min.js` for offline browser-only zip read/write; no server, CDN, or build step needed.
 - Whitespace stripped from Base64 input before decode.

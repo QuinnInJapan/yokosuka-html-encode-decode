@@ -79,7 +79,7 @@
 
   function requireZipSupport() {
     if (typeof window === 'undefined' || typeof window.JSZip === 'undefined') {
-      throw new Error('Zip support could not be loaded. Check your connection and try again.');
+      throw new Error('Zip support could not be loaded from the local JSZip file.');
     }
   }
 

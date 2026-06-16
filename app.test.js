@@ -1,5 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 
 const {
   ENCODED_ENTRY_SUFFIX,
@@ -47,6 +48,13 @@ test('zip files are detected by extension', () => {
   assert.equal(isZipFileName('upload.zip'), true);
   assert.equal(isZipFileName('UPLOAD.ZIP'), true);
   assert.equal(isZipFileName('upload.txt'), false);
+});
+
+test('page loads zip support from a local vendored script for offline use', () => {
+  const html = fs.readFileSync('index.html', 'utf8');
+
+  assert.match(html, /<script src="vendor\/jszip\.min\.js"><\/script>/);
+  assert.doesNotMatch(html, /cdn\.jsdelivr\.net\/npm\/jszip/);
 });
 
 test('single workflow copy previews the output filename by mode', () => {
@@ -101,6 +109,19 @@ test('zip decoding restores files encoded by this app', async () => {
 
   assert.deepEqual(Array.from(outputZip.files['docs/readme.md'].data), Array.from(bytes('hello')));
   assert.deepEqual(Array.from(outputZip.files['assets/photo.png'].data), [1, 2, 3]);
+});
+
+test('missing zip support error points to the local vendor script', async () => {
+  const previousWindow = global.window;
+  global.window = {};
+  try {
+    await assert.rejects(
+      () => encodeZipFile(new File([new Uint8Array([0])], 'sample.zip')),
+      /local JSZip/
+    );
+  } finally {
+    global.window = previousWindow;
+  }
 });
 
 function bytes(value) {
