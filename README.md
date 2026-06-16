@@ -1,6 +1,6 @@
 # yokosuka-html-encode-decode
 
-Small single-file HTML app. Base64 encode/decode files. UTF-8 safe.
+Small static HTML app. Base64 encode/decode files and zip archives. GitHub Pages safe.
 
 ## Live
 
@@ -17,12 +17,15 @@ Same `index.html`, served through third-party CDNs straight from this repo.
 
 ## Usage
 
-- **Decode**: upload file containing Base64 text → decoded UTF-8 output.
-- **Encode**: upload any file (text or binary) → Base64 output.
-- Both outputs downloadable as `.txt`.
+- Pick **Encode** or **Decode**, then choose or drag in one file.
+- The app shows the expected output filename before processing.
+- **Encode a single file**: upload any non-zip file → download `originalfilename-encoded.txt`.
+- **Decode a single file**: upload a text file encoded by this app → download the original filename and bytes.
+- **Encode a zip**: upload `.zip` → download `original.zip-encoded.zip`; all non-image entries become Base64 text files with `.base64-encoded.txt`, while image files stay unchanged.
+- **Decode a zip**: upload a zip encoded by this app → download the restored zip with encoded entries returned to their original names and bytes.
 
 ## Implementation
 
-- `atob` + `decodeURIComponent(escape(...))` for Unicode-safe decode.
-- `btoa` over Latin-1 string built from raw `Uint8Array` bytes for encode.
+- `btoa`/`atob` over raw `Uint8Array` bytes for binary-safe single-file encode/decode.
+- JSZip loaded from a CDN for browser-only zip read/write; no server or build step needed.
 - Whitespace stripped from Base64 input before decode.
